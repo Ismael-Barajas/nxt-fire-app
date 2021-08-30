@@ -1,4 +1,4 @@
-import PostFeed from "../components/Postfeed";
+import PostFeed from "../components/PostFeed";
 import { firestore, fromMillis, postToJSON } from "../library/firebase";
 
 import { useState } from "react";
