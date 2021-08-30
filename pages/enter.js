@@ -2,12 +2,17 @@ import { auth, firestore, googleAuthProvider } from "../library/firebase";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { UserContext } from "../library/context";
 import debounce from "lodash.debounce";
+import Metatags from "../components/Metatags";
 
 export default function Enter(props) {
   const { user, username } = useContext(UserContext);
 
+  // 1. user signed out <SignInButton />
+  // 2. user signed in, but missing username <UsernameForm />
+  // 3. user signed in, has username <SignOutButton />
   return (
     <main>
+      <Metatags title="Enter" description="Sign up for this amazing app!" />
       {user ? (
         !username ? (
           <UsernameForm />
@@ -21,17 +26,18 @@ export default function Enter(props) {
   );
 }
 
-// Sign in with google button
-
+// Sign in with Google button
 function SignInButton() {
   const signInWithGoogle = async () => {
     await auth.signInWithPopup(googleAuthProvider);
   };
 
   return (
-    <button className="btn-google" onClick={signInWithGoogle}>
-      <img src={"/google.png"} /> Sign in with Google
-    </button>
+    <>
+      <button className="btn-google" onClick={signInWithGoogle}>
+        <img src={"/google.png"} width="30px" /> Sign in with Google
+      </button>
+    </>
   );
 }
 
@@ -40,6 +46,7 @@ function SignOutButton() {
   return <button onClick={() => auth.signOut()}>Sign Out</button>;
 }
 
+// Username form
 function UsernameForm() {
   const [formValue, setFormValue] = useState("");
   const [isValid, setIsValid] = useState(false);
@@ -85,14 +92,18 @@ function UsernameForm() {
     }
   };
 
+  //
+
   useEffect(() => {
     checkUsername(formValue);
   }, [formValue]);
 
+  // Hit the database for username match after each debounced change
+  // useCallback is required for debounce to work
   const checkUsername = useCallback(
     debounce(async (username) => {
       if (username.length >= 3) {
-        const ref = firestore.doc(`username/${username}`);
+        const ref = firestore.doc(`usernames/${username}`);
         const { exists } = await ref.get();
         console.log("Firestore read executed!");
         setIsValid(!exists);
@@ -109,7 +120,7 @@ function UsernameForm() {
         <form onSubmit={onSubmit}>
           <input
             name="username"
-            placeholder="Username"
+            placeholder="myname"
             value={formValue}
             onChange={onChange}
           />
@@ -121,6 +132,7 @@ function UsernameForm() {
           <button type="submit" className="btn-green" disabled={!isValid}>
             Choose
           </button>
+
           <h3>Debug State</h3>
           <div>
             Username: {formValue}
